@@ -1,0 +1,81 @@
+---
+
+- hosts: localhost
+  become: true
+  tasks:
+  - name: test without qdisc
+    tc_class:
+      parent: "1:0"
+      classid: "1:1"
+      rate: 100Kbit
+      device: enp0s3
+      state: present
+      discipline: htb
+    ignore_errors: true
+
+  - name: create qdisc for class
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: present
+      qdisc: root
+      discipline: htb
+
+  - name: test class with invalid parent
+    tc_class:
+      parent: "1:3"
+      classid: "1:1"
+      rate: 100Kbit
+      device: enp0s3
+      state: present
+      discipline: htb
+    ignore_errors: true
+
+  - name: test class with invalid classid
+    tc_class:
+      parent: "1:0"
+      classid: "3:1"
+      rate: 100Kbit
+      device: enp0s3
+      state: present
+      discipline: htb
+    ignore_errors: true
+
+  - name: test class with invalid rate
+    tc_class:
+      parent: "1:0"
+      classid: "1:1"
+      rate: 100Kt
+      device: enp0s3
+      state: present
+      discipline: htb
+    ignore_errors: true
+
+  - name: test class with invalid device
+    tc_class:
+      parent: "1:3"
+      classid: "3:1"
+      rate: 100Kbit
+      device: foobar
+      state: present
+      discipline: htb
+    ignore_errors: true
+
+  - name: test class
+    tc_class:
+      parent: "1:0"
+      classid: "1:1"
+      rate: 100Kbit
+      device: enp0s3
+      state: present
+      discipline: htb
+
+  - name: remove qdisc
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: absent
+      qdisc: root
+      discipline: htb
+
+...

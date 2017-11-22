@@ -1,0 +1,49 @@
+---
+
+- hosts: localhost
+  become: true
+  tasks:
+  - name: test failure on handle
+    tc_qdisc:
+      handle: "1:2"
+      device: enp0s3
+      state: present
+      qdisc: root
+      discipline: htb
+    ignore_errors: true
+
+  - name: test failure on device
+    tc_qdisc:
+      handle: "1:0"
+      device: foobar
+      state: present
+      qdisc: root
+      discipline: htb
+    ignore_errors: true
+
+  - name: test failure on qdisc
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: present
+      qdisc: foobar
+      discipline: htb
+    ignore_errors: true
+
+  - name: test qdisc
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: present
+      qdisc: root
+      discipline: htb
+
+  - name: remove qdisc
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: absent
+      qdisc: root
+      discipline: htb
+
+...

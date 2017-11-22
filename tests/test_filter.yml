@@ -1,0 +1,75 @@
+---
+
+- hosts: localhost
+  become: true
+  tasks:
+  - name: test qdisc
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: present
+      qdisc: root
+      discipline: htb
+
+  - name: test filter without class
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 8080
+    ignore_errors: true
+
+  - name: test class
+    tc_class:
+      parent: "1:0"
+      classid: "1:1"
+      rate: 100Kbit
+      device: enp0s3
+      state: present
+      discipline: htb
+
+  - name: test filter with incorrect parent
+    tc_filter:
+      parent: "1:1"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 8080
+    ignore_errors: true
+
+  - name: test filter with incorrect device
+    tc_filter:
+      parent: "1:0"
+      device: foobar
+      flowid: "1:2"
+      priority: 2
+      port: 8080
+    ignore_errors: true
+
+  - name: test filter with incorrect flowid
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:12"
+      priority: 2
+      port: 8080
+    ignore_errors: true
+
+  - name: test filter
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 8080
+
+  - name: remove qdisc
+    tc_qdisc:
+      handle: "1:0"
+      device: enp0s3
+      state: absent
+      qdisc: root
+      discipline: htb
+
+...
