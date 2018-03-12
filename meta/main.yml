@@ -1,0 +1,15 @@
+galaxy_info:
+  author: Matt Suringa
+  description: Set of 3 modules that handle Traffic control on linux machines
+  company: Suringa IT Ltd
+
+  license: GPLv2
+
+  min_ansible_version: 1.2
+
+  galaxy_tags:
+    - system
+    - trafficcontrol
+    - linux
+
+dependencies: []
