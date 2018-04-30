@@ -95,7 +95,11 @@ STR_CHANGE = "CHANGE"
 
 def _check_current_qdisc(module):
     """ Check what the current qdisc for the specicified device is """
-    qdisc_set = tc_utils.get_current("qdisc", module).split(" ")
+    qdisc = tc_utils.get_current("qdisc", module)
+    if "\n" in qdisc:
+        qdisc = qdisc.split("\n")[-2]
+    qdisc_set = qdisc.split(" ")
+
     (major, sep, _) = module.params["handle"].partition(":")
 
     if qdisc_set[1] == DEFAULT_QDISC:
