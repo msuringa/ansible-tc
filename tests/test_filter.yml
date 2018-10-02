@@ -64,6 +64,46 @@
       priority: 2
       port: 8080
 
+  - name: test filter invalid port with cgroup off
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 65536
+      cgroup: no
+    ignore_errors: true
+
+  - name: test filter cgroup with invalid handle
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 65536
+      cgroup: yes
+    ignore_errors: true
+
+  - name: test filter cgroup decimal handle
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 65536
+      cgroup: true
+      handle: "5:"
+
+  - name: test filter cgroup hex handle
+    tc_filter:
+      parent: "1:0"
+      device: enp0s3
+      flowid: "1:2"
+      priority: 2
+      port: 65536
+      cgroup: on
+      handle: "0xa4"
+
   - name: remove qdisc
     tc_qdisc:
       handle: "1:0"

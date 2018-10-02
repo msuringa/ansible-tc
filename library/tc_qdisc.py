@@ -140,7 +140,7 @@ def main():
     state = module.params["state"]
     action = tc_utils.set_action(state)
 
-    # Skip task with debufg output if check_mode is enabled
+    # Skip task with debug output if check_mode is enabled
     if module.check_mode:
         cmd = tc_utils.build_qdisc_command(module, action)
         module.debug("Running in check mode, would have run: %s" % " ".join(cmd))
