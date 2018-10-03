@@ -64,6 +64,7 @@ def build_class_command(module, action):
 
     cmd.append(module.params["discipline"])
     cmd.extend(["rate", module.params["rate"]])
+    cmd.extend(["ceil", module.params["ceil"]])
 
     return cmd
 
@@ -83,6 +84,23 @@ def build_filter_command(module, action):
 
     cmd.extend(["match", "ip", "dport", str(module.params["port"]), "0xffff"])
     cmd.extend(["flowid", module.params["flowid"]])
+
+    return cmd
+
+def build_filter_cgroup_command(module, action):
+    """ Construct command parameters and return the list for filter"""
+    cmd = _build_generic_command(module.get_bin_path('tc', required=True),
+                                 "filter", action, module.params["device"])
+    if action == "show":
+        return cmd
+
+    cmd.extend(["parent", module.params["parent"]])
+    cmd.extend(["prio", str(module.params["priority"])])
+    if action == "del":
+        return cmd
+
+    cmd.extend(["handle", str(module.params["handle"])])
+    cmd.append("cgroup")
 
     return cmd
 

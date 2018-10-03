@@ -62,6 +62,12 @@ options:
             - Rate to apply to the class, must be provided in the form of ##Unit, i.e. 10Mbit, 500Kbit
             - Allowed units are [ bit, kbit, mbit, gbit, bps, kbps, mbps, gbps ]
         required: true
+    ceil:
+        description:
+            - Maximum rate to apply to the class, must be provided in the form of ##Unit, i.e. 10Mbit, 500Kbit
+            - Allowed units are [ bit, kbit, mbit, gbit, bps, kbps, mbps, gbps ]
+            - Defaults to rate: value if not specified
+        required: false
     state:
         description:
             - Whether the class should exist or not, taking action if the state is different from what is stated.
@@ -81,6 +87,14 @@ EXAMPLES = '''
     classid: "1:6"
     device: eth4
     rate: 2Gbit
+
+- name: Create new class with different rate and ceil parameters
+  tc_class:
+    parent: "1:0"
+    classid: "1:9"
+    device: eth0
+    rate: 450mbit
+    ceil: 900mbit
 '''
 
 RETURN = '''
@@ -108,6 +122,12 @@ def _convert(rate):
     return int(rate_set[0]) * RATES[rate_set[1].lower()]
 
 
+def _convert(ceil):
+    """ Convert provided ceil to bits to do accurate comparison later """
+    ceil_set = ["".join(x) for _, x in itertools.groupby(ceil, key=str.isdigit)]
+    return int(ceil_set[0]) * RATES[ceil_set[1].lower()]
+
+
 def _validate_rate(module):
     """ Compare input rate and rate currently specified for class """
     rate = ["".join(x) for _, x in itertools.groupby(module.params["rate"], key=str.isdigit)]
@@ -120,6 +140,22 @@ def _validate_rate(module):
         return (False, "No number specified in rate")
     if rate[1].lower() not in RATES:
         return (False, "Invalid rate specified, please use one of %s" % RATES.keys())
+
+    return (True, "")
+
+
+def _validate_ceil(module):
+    """ Compare input ceil and ceil currently specified for class """
+    ceil = ["".join(x) for _, x in itertools.groupby(module.params["ceil"], key=str.isdigit)]
+    if len(ceil) != 2:
+        return (False, "Incorrect syntax")
+    # Fail if ceil does not contain a valid number
+    try:
+        _ = int(ceil[0])
+    except ValueError:
+        return (False, "No number specified in ceil")
+    if ceil[1].lower() not in RATES:
+        return (False, "Invalid ceil specified, please use one of %s" % RATES.keys())
 
     return (True, "")
 
@@ -139,7 +175,9 @@ def _check_current_class(module):
     cls = class_set[idx[0]].split(" ")
     u_rate = _convert(module.params["rate"])
     c_rate = _convert(cls[7])
-    if u_rate != c_rate:
+    u_ceil = _convert(module.params["ceil"])
+    c_ceil = _convert(cls[9])
+    if u_rate != c_rate or u_ceil != c_ceil:
         return STR_CHANGE
 
     return STR_MATCH
@@ -154,7 +192,8 @@ def main():
             parent=dict(required=False, default="1:0", type="str"),
             classid=dict(required=False, default="1:1", type="str"),
             discipline=dict(required=False, default="htb", type="str"),
-            rate=dict(required=True, type='str')
+            rate=dict(required=True, type='str'),
+            ceil=dict(required=False, type='str')
         )
     )
 
@@ -196,6 +235,16 @@ def main():
             rate=module.params["rate"],
             msg=msg
         )
+
+    if not module.params["ceil"]:
+        module.params["ceil"] = module.params["rate"]
+    else:
+        (rco, msg) = _validate_ceil(module)
+        if not rco:
+            module.fail_json(
+                ceil=module.params["ceil"],
+                msg=msg
+            )
 
     if module.check_mode:
         cmd = tc_utils.build_class_command(module, action)

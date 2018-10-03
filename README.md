@@ -5,7 +5,8 @@ Manage the 3 different aspects required to set up traffic control (bandwidth thr
 ## Features
 Create and manage a single qdisc per network interface _(might change to allow multiple)_<br />
 Create multiple classes with limited throughput speeds per qdisc.<br />
-Configure a filter on a port and assign it to a created class.
+Configure a filter on a port and assign it to a created class.<br />
+Filter packets based on the control group of their process.
 
 ## Examples
 ```yaml
@@ -37,7 +38,7 @@ Requires access to the tc command (so must be run as root or equivalent).
 ## Installation
 Clone the repository in the location of your choosing
 
-Ensure the following 2 paramers are set in your ansible.cfg file:
+Ensure the following 2 parameters are set in your ansible.cfg file:
 ```yaml
 module_utils = /path/to/cloned/repo/library/tc_utils
 library = /path/to/cloned/repo/library

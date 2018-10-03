@@ -68,6 +68,20 @@ options:
         required: false
         default: present
         choices: [ present, absent ]
+    cgroup:
+        description:
+            - Apply rate limit to cgroup with matching net_cls.clasid
+            - Overrides port specification
+            - Use invalid port value (65536) to ensure port filter is NOT used
+        required: false
+        default: false
+        type: bool
+        choices: [ true, false, yes, no ]
+    handle:
+        description:
+            - The class handle to attach the cgroup 
+            - Decimal or hex  value (example: "5:" or "0x5")
+        required: false
 '''
 
 EXAMPLES = '''
@@ -77,6 +91,17 @@ EXAMPLES = '''
     flowid: "1:6"
     port: 80
     priority: 5
+
+- name: Create cgroup filter
+  tc_filter:
+    device: eth0
+    flowid: "1:8"
+    parent: "1:0"
+    port: 65536
+    priority: 8
+    state: present
+    cgroup: yes
+    handle: "8:"
 '''
 
 RETURN = '''
@@ -129,7 +154,9 @@ def main():
             parent=dict(required=False, default="1:0", type="str"),
             flowid=dict(required=False, default="1:1", type="str"),
             priority=dict(required=True, type="int"),
-            port=dict(required=True, type="int")
+            port=dict(required=True, type="int"),
+            cgroup=dict(required=False, default=False, type="bool"),
+            handle=dict(required=False, type="str")
         )
     )
 
@@ -189,8 +216,11 @@ def main():
     if current_filter == STR_NONE and module.params["state"] == "absent":
         module.exit_json(changed=False)
 
-    # create the class
-    cmd = tc_utils.build_filter_command(module, action)
+    # create the filter
+    if module.params["cgroup"] is not True:
+        cmd = tc_utils.build_filter_command(module, action)
+    else:
+        cmd = tc_utils.build_filter_cgroup_command(module, action)
     #module.fail_json(msg=cmd, rc=1)
     (rco, _, err) = module.run_command(cmd)
     if rco is not None and rco != 0:
