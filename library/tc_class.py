@@ -122,12 +122,6 @@ def _convert(rate):
     return int(rate_set[0]) * RATES[rate_set[1].lower()]
 
 
-def _convert(ceil):
-    """ Convert provided ceil to bits to do accurate comparison later """
-    ceil_set = ["".join(x) for _, x in itertools.groupby(ceil, key=str.isdigit)]
-    return int(ceil_set[0]) * RATES[ceil_set[1].lower()]
-
-
 def _validate_rate(module):
     """ Compare input rate and rate currently specified for class """
     rate = ["".join(x) for _, x in itertools.groupby(module.params["rate"], key=str.isdigit)]
